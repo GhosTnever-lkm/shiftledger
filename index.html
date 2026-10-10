@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f5f0">
+  <meta name="description" content="Локальный табель смен и расчёт начислений по часовой ставке. Без аккаунта и передачи данных.">
+  <title>ShiftLedger — табель смен</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="ShiftLedger, начало"><span class="brand-icon">SL</span><span>shiftledger<span class="brand-period">.</span></span></a>
+      <nav><a href="#overview">Сводка</a><a href="#entry">Смены</a><a href="#history">История</a></nav>
+      <div class="local-badge"><i></i> ДАННЫЕ ТОЛЬКО НА ЭТОМ УСТРОЙСТВЕ</div>
+    </header>
+
+    <main id="top">
+      <section class="intro">
+        <div><p class="kicker">ЛИЧНЫЙ ТАБЕЛЬ · 01</p><h1>Твои часы.<br><em>Твой расчёт.</em></h1><p class="intro-copy">Записывай смены, учитывай перерывы и смотри начисления по ставкам. Суммы до налогов; данные не покидают браузер.</p><a href="#entry" class="jump">Добавить смену <span>↓</span></a></div>
+        <aside class="intro-note"><span class="note-number">01 — 03</span><strong>Записал.<br>Сверил.<br>Экспортировал.</strong><small>Без регистрации<br>и облачной синхронизации.</small></aside>
+      </section>
+
+      <section id="overview" class="section">
+        <div class="section-head"><div><p class="kicker">01 / ПЕРИОД</p><h2>Сводка</h2></div><div class="period-controls"><label>Период<select id="period-filter"><option value="month">Этот месяц</option><option value="week">Эта неделя</option><option value="all">Всё время</option></select></label><button id="reset-period" class="icon-button" type="button" title="Сбросить фильтр" aria-label="Сбросить период">↺</button></div></div>
+        <div class="summary-grid" id="summary-grid" aria-live="polite"></div>
+        <div class="overview-bottom"><div><h3>По валютам</h3><div id="currency-summary" class="currency-summary"></div></div><p class="fine-print">Суммы показаны до налогов, удержаний, чаевых и сверхурочных надбавок. ShiftLedger не определяет правила оплаты — проверь расчёт по своему договору.</p></div>
+        <div class="period-ledgers">
+          <div><div class="ledger-head"><h3>По неделям</h3><span>ISO · ПН—ВС</span></div><div id="weekly-summary" class="ledger-list"></div></div>
+          <div><div class="ledger-head"><h3>По месяцам</h3><span>Календарные</span></div><div id="monthly-summary" class="ledger-list"></div></div>
+        </div>
+      </section>
+
+      <section id="entry" class="section entry-section">
+        <div class="section-head"><div><p class="kicker">02 / ЗАПИСЬ</p><h2 id="form-title">Добавить смену</h2></div><p class="head-hint">Смена может завершаться на следующий день.<br>Перерыв указывается в минутах.</p></div>
+        <form id="shift-form" class="entry-card" novalidate>
+          <input id="edit-id" type="hidden">
+          <label class="field"><span>Дата начала</span><input id="shift-date" type="date" required></label>
+          <label class="field"><span>Начало</span><input id="shift-start" type="time" value="09:00" required></label>
+          <label class="field"><span>Конец</span><input id="shift-end" type="time" value="17:00" required></label>
+          <label class="field"><span>Перерыв · мин</span><input id="shift-break" type="number" min="0" step="1" value="30" required></label>
+          <label class="field"><span>Ставка за час</span><input id="shift-rate" type="number" min="0" max="9999999.99" step="0.01" inputmode="decimal" placeholder="12.50" required></label>
+          <label class="field"><span>Валюта</span><select id="shift-currency"><option>AZN</option><option>USD</option><option>EUR</option><option>GBP</option><option>TRY</option><option>RUB</option><option>UAH</option><option>PLN</option><option>CAD</option><option>AUD</option></select></label>
+          <label class="field note-field"><span>Заметка <small>необязательно</small></span><input id="shift-note" maxlength="500" placeholder="Например: вечерняя смена"></label>
+          <div class="form-actions"><button id="cancel-edit" class="button secondary" type="button" hidden>Отмена</button><button class="button primary" type="submit" id="save-shift">Сохранить смену <span>↗</span></button></div>
+        </form>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section id="history" class="section">
+        <div class="section-head history-head"><div><p class="kicker">03 / ЖУРНАЛ</p><h2>История смен</h2></div><div class="history-tools"><label class="search"><span class="sr-only">Поиск смен</span><input id="search" type="search" placeholder="Поиск по дате или заметке"></label><button id="export-csv" class="button secondary" type="button">CSV ↓</button><button id="export-json" class="button secondary" type="button">JSON ↓</button><label class="button secondary import-button">Импорт JSON ↑<input id="import-json" type="file" accept=".json,application/json"></label></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Дата</th><th>Время</th><th>Перерыв</th><th>Оплачено</th><th>Ставка</th><th>Начислено</th><th>Заметка</th><th><span class="sr-only">Действия</span></th></tr></thead><tbody id="shift-rows"></tbody></table><div id="empty-state" class="empty-state"><span>◷</span><strong>Пока нет смен</strong><p>Добавь первую запись — сводка появится здесь.</p></div></div>
+        <p class="table-foot" id="record-count"></p>
+      </section>
+    </main>
+
+    <footer><a class="brand" href="#top"><span class="brand-icon small">SL</span><span>shiftledger<span class="brand-period">.</span></span></a><span>ТВОИ ДАННЫЕ ОСТАЮТСЯ В ЭТОМ БРАУЗЕРЕ</span><a href="https://github.com/GhosTnever-lkm/shiftledger">Исходный код ↗</a></footer>
+  </div>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>
