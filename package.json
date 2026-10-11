@@ -1,9 +1,14 @@
 {
   "name": "shiftledger",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "type": "module",
-  "scripts": { "test": "node --test", "check": "node --check core.mjs && node --check app.mjs && node --test" },
-  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check core.mjs && node --check app.mjs && node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "license": "MIT"
 }
