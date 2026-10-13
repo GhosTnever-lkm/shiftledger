@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2 — 2026-10-13
+
+- Validate dates in years 0001–0099 correctly.
+- Persist changes before updating the in-memory shift list so quota failures cannot leave unsaved edits active.
+- Expand CI to Node.js 20, 22, and 24; add automated release archives with SHA-256 checksums.
+
 ## 0.1.1 - 2026-10-11
 
 - Complete the standard MIT license text, restoring the full warranty and liability disclaimer.
