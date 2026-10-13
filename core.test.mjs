@@ -31,6 +31,12 @@ test('uses ISO week-year at calendar year boundaries', () => {
   assert.equal(aggregateWeeks([shift({ date: '2021-01-01' })])[0].period, '2020-W53');
 });
 
+test('validates dates in years 0001 through 0099 without the JavaScript 1900 offset', () => {
+  assert.equal(validateShift(shift({ date: '0001-01-01' })).date, '0001-01-01');
+  assert.equal(validateShift(shift({ date: '0099-12-31' })).date, '0099-12-31');
+  assert.throws(() => validateShift(shift({ date: '0001-02-29' })), { code: 'INVALID_DATE' });
+});
+
 test('exports quoted CSV and prefixes formula-like notes', () => {
   const csv = exportCsv([shift({ note: '=HYPERLINK("https://example.test")' })]);
   assert.ok(csv.startsWith('"date","start"'));

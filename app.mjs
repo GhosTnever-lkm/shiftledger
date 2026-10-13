@@ -30,9 +30,10 @@ function loadShifts() {
   } catch { return []; }
 }
 
-function save() {
+function save(nextShifts = shifts) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(shifts));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextShifts));
+    shifts = nextShifts;
     render();
     return true;
   } catch {
@@ -178,8 +179,8 @@ function startEdit(id) {
 }
 
 function deleteShift(id) {
-  shifts = shifts.filter((item) => item.id !== id);
-  if (save()) message('Запись смены удалена.');
+  const nextShifts = shifts.filter((item) => item.id !== id);
+  if (save(nextShifts)) message('Запись смены удалена.');
 }
 
 function submitShift(event) {
@@ -187,12 +188,13 @@ function submitShift(event) {
   try {
     const shift = validateShift({ date: $('shift-date').value, start: $('shift-start').value, end: $('shift-end').value, breakMinutes: Number($('shift-break').value), rate: $('shift-rate').value, currency: $('shift-currency').value, note: $('shift-note').value });
     const id = $('edit-id').value;
-    if (id) shifts = shifts.map((item) => item.id === id ? { id, ...cleanShift(shift) } : item);
+    let nextShifts;
+    if (id) nextShifts = shifts.map((item) => item.id === id ? { id, ...cleanShift(shift) } : item);
     else {
       if (shifts.length >= 5000) throw new Error('Достигнут лимит 5000 смен. Экспортируй архив и очисти часть записей.');
-      shifts.push({ id: crypto.randomUUID(), ...cleanShift(shift) });
+      nextShifts = [...shifts, { id: crypto.randomUUID(), ...cleanShift(shift) }];
     }
-    if (save()) { resetForm(); message(id ? 'Изменения сохранены.' : 'Смена добавлена.'); }
+    if (save(nextShifts)) { resetForm(); message(id ? 'Изменения сохранены.' : 'Смена добавлена.'); }
   } catch (error) { message(error.message || 'Не удалось сохранить смену.', true); }
 }
 
@@ -209,8 +211,8 @@ async function importFile(file) {
     const incoming = parseBackup(await file.text());
     if (shifts.length + incoming.length > 5000) throw new Error('Импорт превысит лимит 5000 смен. Сначала экспортируй и освободи место.');
     if (!confirm(`Добавить ${incoming.length} смен из архива? Текущие записи останутся.`)) return;
-    shifts = [...shifts, ...incoming.map((item) => ({ id: crypto.randomUUID(), ...item }))];
-    if (save()) message(`Добавлено записей: ${incoming.length}.`);
+    const nextShifts = [...shifts, ...incoming.map((item) => ({ id: crypto.randomUUID(), ...item }))];
+    if (save(nextShifts)) message(`Добавлено записей: ${incoming.length}.`);
   } catch (error) { message(error.message || 'Не удалось импортировать файл.', true); }
   finally { $('import-json').value = ''; }
 }

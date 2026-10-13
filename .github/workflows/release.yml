@@ -1,0 +1,39 @@
+name: Create release archive
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing version tag to package and upload
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag || github.ref }}
+      - name: Package source
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+        run: |
+          mkdir -p dist
+          zip -r "dist/ShiftLedger-${RELEASE_TAG}.zip" . -x '.git/*' 'dist/*'
+          sha256sum "dist/ShiftLedger-${RELEASE_TAG}.zip" > "dist/ShiftLedger-${RELEASE_TAG}.zip.sha256"
+      - name: Publish or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" dist/* --clobber
+          else
+            gh release create "$RELEASE_TAG" dist/* --title "ShiftLedger $RELEASE_TAG" --notes-file CHANGELOG.md
+          fi

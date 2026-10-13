@@ -14,7 +14,9 @@ function validDate(value) {
   const match = DATE_RE.exec(value);
   if (!match) fail('INVALID_DATE', 'Date must use YYYY-MM-DD.');
   const [, year, month, day] = match;
-  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  const date = new Date(0);
+  date.setUTCHours(0, 0, 0, 0);
+  date.setUTCFullYear(Number(year), Number(month) - 1, Number(day));
   if (date.toISOString().slice(0, 10) !== value) fail('INVALID_DATE', 'Date is not a real calendar day.');
   return value;
 }
