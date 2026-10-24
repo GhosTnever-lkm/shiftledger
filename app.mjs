@@ -1,4 +1,4 @@
-import { aggregateMonths, aggregateWeeks, exportBackup, exportCsv, parseBackup, validateShift } from './core.mjs';
+import { aggregateMonths, aggregateWeeks, exportBackup, exportCsv, MAX_BACKUP_BYTES, parseBackup, validateShift } from './core.mjs';
 
 const $ = (id) => document.getElementById(id);
 const STORAGE_KEY = 'shiftledger.shifts.v1';
@@ -207,7 +207,7 @@ function download(name, content, type) {
 async function importFile(file) {
   if (!file) return;
   try {
-    if (file.size > 2_000_000) throw new Error('JSON-файл больше 2 МБ.');
+    if (file.size > MAX_BACKUP_BYTES) throw new Error('JSON-файл больше 20 МиБ.');
     const incoming = parseBackup(await file.text());
     if (shifts.length + incoming.length > 5000) throw new Error('Импорт превысит лимит 5000 смен. Сначала экспортируй и освободи место.');
     if (!confirm(`Добавить ${incoming.length} смен из архива? Текущие записи останутся.`)) return;
