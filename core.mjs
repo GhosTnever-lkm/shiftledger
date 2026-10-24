@@ -1,5 +1,6 @@
 export const BACKUP_VERSION = 1;
 export const MAX_SHIFTS = 5000;
+export const MAX_BACKUP_BYTES = 20 * 1024 * 1024;
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const TIME_RE = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 
@@ -104,11 +105,13 @@ export function exportBackup(shifts) {
     const shift = validateShift(entry);
     return { date: shift.date, start: shift.start, end: shift.end, breakMinutes: shift.breakMinutes, rate: (shift.rateCents / 100).toFixed(2), currency: shift.currency, note: shift.note };
   });
-  return JSON.stringify({ app: 'ShiftLedger', version: BACKUP_VERSION, shifts: clean }, null, 2);
+  const backup = JSON.stringify({ app: 'ShiftLedger', version: BACKUP_VERSION, shifts: clean }, null, 2);
+  if (new TextEncoder().encode(backup).byteLength > MAX_BACKUP_BYTES) fail('BACKUP_TOO_LARGE', 'Backup must be no larger than 20 MiB.');
+  return backup;
 }
 
 export function parseBackup(text) {
-  if (typeof text !== 'string' || text.length > 2_000_000) fail('BACKUP_TOO_LARGE', 'Backup must be text no larger than 2 MB.');
+  if (typeof text !== 'string' || text.length > MAX_BACKUP_BYTES || new TextEncoder().encode(text).byteLength > MAX_BACKUP_BYTES) fail('BACKUP_TOO_LARGE', 'Backup must be no larger than 20 MiB.');
   let data;
   try { data = JSON.parse(text); } catch { fail('INVALID_BACKUP', 'Backup is not valid JSON.'); }
   if (!data || data.app !== 'ShiftLedger' || data.version !== BACKUP_VERSION || !Array.isArray(data.shifts)) fail('INVALID_BACKUP', 'Backup format or version is not supported.');
